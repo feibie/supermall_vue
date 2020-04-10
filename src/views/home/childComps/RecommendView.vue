@@ -28,7 +28,7 @@
   .recommend{
     display: flex;
     text-align: center;
-    font-size: 12px;
+    /*font-size: 12px;*/
 
     padding: 10px 0 20px;
 
@@ -39,7 +39,7 @@
   }
   .recommend-item img{
     margin-bottom: 10px;
-    width: 65px;
-    height: 65px;
+    width: 70px;
+    height: 70px;
   }
 </style>
