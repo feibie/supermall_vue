@@ -3,105 +3,23 @@
     <nav-bar class="home-nav">
       <div slot="center">购物街</div>
     </nav-bar>
-    <home-swiper :banners="banners"/>
-    <recommend-view :recommends="recommends"/>
-    <feature/>
-    <tab-control class="tab-control" :titles="['流行','新款','精选']"/>
-    <ul>
-      <li>列表1</li>
-      <li>列表2</li>
-      <li>列表3</li>
-      <li>列表4</li>
-      <li>列表5</li>
-      <li>列表6</li>
-      <li>列表7</li>
-      <li>列表8</li>
-      <li>列表9</li>
-      <li>列表10</li>
-      <li>列表2</li>
-      <li>列表3</li>
-      <li>列表4</li>
-      <li>列表5</li>
-      <li>列表6</li>
-      <li>列表7</li>
-      <li>列表8</li>
-      <li>列表9</li>
-      <li>列表10</li>
-      <li>列表2</li>
-      <li>列表3</li>
-      <li>列表4</li>
-      <li>列表5</li>
-      <li>列表6</li>
-      <li>列表7</li>
-      <li>列表8</li>
-      <li>列表9</li>
-      <li>列表10</li>
-      <li>列表2</li>
-      <li>列表3</li>
-      <li>列表4</li>
-      <li>列表5</li>
-      <li>列表6</li>
-      <li>列表7</li>
-      <li>列表8</li>
-      <li>列表9</li>
-      <li>列表10</li>
-      <li>列表2</li>
-      <li>列表3</li>
-      <li>列表4</li>
-      <li>列表5</li>
-      <li>列表6</li>
-      <li>列表7</li>
-      <li>列表8</li>
-      <li>列表9</li>
-      <li>列表10</li>
 
-      <li>列表2</li>
-      <li>列表3</li>
-      <li>列表4</li>
-      <li>列表5</li>
-      <li>列表6</li>
-      <li>列表7</li>
-      <li>列表8</li>
-      <li>列表9</li>
-      <li>列表10</li>
-      <li>列表2</li>
-      <li>列表3</li>
-      <li>列表4</li>
-      <li>列表5</li>
-      <li>列表6</li>
-      <li>列表7</li>
-      <li>列表8</li>
-      <li>列表9</li>
-      <li>列表10</li>
-      <li>列表2</li>
-      <li>列表3</li>
-      <li>列表4</li>
-      <li>列表5</li>
-      <li>列表6</li>
-      <li>列表7</li>
-      <li>列表8</li>
-      <li>列表9</li>
-      <li>列表10</li>
-      <li>列表2</li>
-      <li>列表3</li>
-      <li>列表4</li>
-      <li>列表5</li>
-      <li>列表6</li>
-      <li>列表7</li>
-      <li>列表8</li>
-      <li>列表9</li>
-      <li>列表10</li>
-      <li>列表2</li>
-      <li>列表3</li>
-      <li>列表4</li>
-      <li>列表5</li>
-      <li>列表6</li>
-      <li>列表7</li>
-      <li>列表8</li>
-      <li>列表9</li>
-      <li>列表10</li>
+    <scroll class="contents"
+            ref="scroll"
+            :probe-type="3"
+            @scroll="contentScroll"
+            :pull-up-load="true" @pullingUp="loadMore">
+      <home-swiper :banners="banners"/>
+      <recommend-view :recommends="recommends"/>
+      <feature/>
+      <tab-control class="tab-control"
+                   :titles="['流行','新款','精选']"
+                   @tabClick="tabClick"/>
+      <goods-list :goods="showGoods"/>
+    </scroll>
 
-    </ul>
+<!--    native监听组件的修饰符-->
+    <back-top @click.native="backClick" v-show="isShowBackTop"/>
   </div>
 </template>
 
@@ -113,10 +31,13 @@
 
   import NavBar from "components/common/nagbar/NavBar";
   import TabControl from "components/content/tabControl/TabControl";
+  import GoodsList from "components/content/goods/GoodsList";
+  import Scroll from "components/common/scroll/Scroll"
+  import BackTop from "components/content/backTop/BackTop";
 
   import {
     getHomeMultidata,
-    getHomeGoodss
+    getHomeGoods
   } from "network/home";
 
 
@@ -127,18 +48,30 @@
       HomeSwiper,
       RecommendView,
       Feature,
+
       NavBar,
-      TabControl
+      TabControl,
+      GoodsList,
+      Scroll,
+      BackTop,
     },
     data() {
       return {
+        message:'哈哈哈',
         banners: [],
         recommends: [],
         goods: {
           'pop': {page: 0, list: []},
-          'news': {page: 0, list: []},
+          'new': {page: 0, list: []},
           'sell': {page: 0, list: []},
-        }
+        },
+        currentType:  'pop',
+        isShowBackTop: false,
+      }
+    },
+    computed: {
+      showGoods() {
+        return this.goods[this.currentType].list
       }
     },
     created() {
@@ -150,6 +83,38 @@
       this.getHomeGoods('sell')
     },
     methods: {
+      /**
+       * 事件监听相关方法
+       */
+      tabClick(index) {
+        switch (index) {
+          case 0:
+            this.currentType = 'pop'
+            break
+          case 1:
+            this.currentType = 'new'
+            break
+          case 2:
+            this.currentType = 'sell'
+            break
+        }
+      },
+      backClick() {
+        this.$refs.scroll.scrollTo(0, 0, 500)
+      },
+      contentScroll(position) {
+        this.isShowBackTop = (-position.y) > 1000
+      },
+      loadMore(){
+        //上拉加载
+        console.log('loadMore');
+        this.getHomeGoods(this.currentType)
+      },
+
+
+      /**
+       * 网络请求相关的方法
+       */
       getHomeMultidata() {
         getHomeMultidata().then(res => {
           this.banners = res.data.banner.list
@@ -158,11 +123,11 @@
       },
       getHomeGoods(type) {
         const page = this.goods[type].page + 1
-        getHomeGoodss(type, page).then(res => {
-          console.log(...res.data.list)
+        getHomeGoods(type, page).then(res => {
           this.goods[type].list.push(...res.data.list)
           this.goods[type].page += 1
-          console.log(this.goods)
+
+          this.$refs.scroll.finishPullUp()
         })
       }
     }
@@ -170,9 +135,11 @@
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style>
+<style scoped>
   #home {
+    position: relative;
     padding-top: 44px;
+    height: 100vh;
   }
 
   .home-nav {
@@ -183,11 +150,21 @@
     left: 0;
     right: 0;
     top: 0;
-    z-index: 1;
+    z-index: 9;
   }
 
   .tab-control {
     position: sticky;
     top: 44px;
+    z-index: 9;
+  }
+  .contents{
+    overflow: hidden;
+    height: calc(100vh - 93px);
+    /*position: absolute;*/
+    /*top: 44px;*/
+    /*bottom: 49px;*/
+    /*left: 0;*/
+    /*right: 0;*/
   }
 </style>
